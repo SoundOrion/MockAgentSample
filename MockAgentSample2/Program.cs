@@ -253,6 +253,37 @@ public class MockAgentOrchestrator
         _slackTools = slackTools;
     }
 
+    //public string Run(string userRequest, string csvPath)
+    //{
+    //    var context = new AgentContext
+    //    {
+    //        UserRequest = userRequest,
+    //        CsvPath = csvPath
+    //    };
+
+    //    for (int step = 1; step <= 10; step++)
+    //    {
+    //        var decision = _planner.DecideNextStep(context);
+
+    //        Console.WriteLine();
+    //        Console.WriteLine($"[Agent] Step {step}");
+    //        Console.WriteLine($"[Agent] Decision: {decision.ActionType}");
+
+    //        if (decision.ActionType == "finish")
+    //        {
+    //            Console.WriteLine("[Agent] Finished.");
+    //            return decision.FinalMessage;
+    //        }
+
+    //        Console.WriteLine($"[Agent] Tool: {decision.ToolName}");
+    //        Console.WriteLine($"[Agent] Reason: {decision.Reason}");
+
+    //        ExecuteTool(decision.ToolName, context);
+    //    }
+
+    //    return "ステップ数上限に達したため終了しました。";
+    //}
+
     public string Run(string userRequest, string csvPath)
     {
         var context = new AgentContext
@@ -266,22 +297,43 @@ public class MockAgentOrchestrator
             var decision = _planner.DecideNextStep(context);
 
             Console.WriteLine();
-            Console.WriteLine($"[Agent] Step {step}");
-            Console.WriteLine($"[Agent] Decision: {decision.ActionType}");
+            Console.WriteLine($"========== STEP {step} ==========");
+            Console.WriteLine($"[Step{step}] Planner判断");
+            Console.WriteLine($" ActionType : {decision.ActionType}");
 
             if (decision.ActionType == "finish")
             {
-                Console.WriteLine("[Agent] Finished.");
+                Console.WriteLine($" FinalMessage : {decision.FinalMessage}");
+                Console.WriteLine($"[Step{step}] Agent完了");
                 return decision.FinalMessage;
             }
 
-            Console.WriteLine($"[Agent] Tool: {decision.ToolName}");
-            Console.WriteLine($"[Agent] Reason: {decision.Reason}");
+            Console.WriteLine($" ToolName    : {decision.ToolName}");
+            Console.WriteLine($" Reason      : {decision.Reason}");
 
+            Console.WriteLine($"[Step{step}] Tool実行");
             ExecuteTool(decision.ToolName, context);
+
+            Console.WriteLine($"[Step{step}] Context更新");
+            PrintContext(context);
         }
 
         return "ステップ数上限に達したため終了しました。";
+    }
+
+    private void PrintContext(AgentContext context)
+    {
+        Console.WriteLine($" CsvLoaded         : {context.CsvLoaded}");
+        Console.WriteLine($" AnalysisCompleted : {context.AnalysisCompleted}");
+        Console.WriteLine($" SlackPosted       : {context.SlackPosted}");
+
+        Console.WriteLine($" SalesRecords      : {(context.SalesRecords?.Count ?? 0)}件");
+
+        if (context.AnalysisResult != null)
+        {
+            Console.WriteLine($" AvgSales          : {context.AnalysisResult.AverageSales:F2}");
+            Console.WriteLine($" Anomalies         : {context.AnalysisResult.Anomalies.Count}件");
+        }
     }
 
     private void ExecuteTool(string toolName, AgentContext context)
